@@ -14,6 +14,11 @@ public class SortContext(int[] arr) {
         return data[i].CompareTo(data[j]);
     }
 
+    public int CompareValues(int a, int b, int i, int j) {
+        Ops.Add(new SortOp(OpKind.Compare, i, j, 0));
+        return a.CompareTo(b);
+    }
+
     public void Swap(int i, int j) {
         Ops.Add(new SortOp(OpKind.Swap, i, j, 0));
         (data[i], data[j]) = (data[j], data[i]);

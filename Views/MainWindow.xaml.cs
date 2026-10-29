@@ -18,7 +18,12 @@ public partial class MainWindow : Window {
     private static readonly Brush DoneBrush = Brushes.LimeGreen;
     private static readonly Brush ErrorBrush = Brushes.Red;
 
-    private readonly Sorting[] algorithms = [new Bubble(), new Selection(), new Quick()];
+    private readonly Sorting[] algorithms = [
+        new Bubble(), new Cocktail(), new OddEven(), new Gnome(), new Comb(),
+        new Insertion(), new Shell(), new Selection(), new Cycle(), new Pancake(),
+        new Quick(), new Intro(), new Merge(), new Tim(), new Heap(), new Smooth(), new Tree(),
+        new Bitonic(), new Counting(), new Pigeonhole(), new Bucket(), new RadixLsd(), new RadixMsd(),
+    ];
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(16) };
     private readonly List<int> highlighted = [];
 
