@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Bitonic : Sorting {
     public override string Name => "Bitonic";
+    public override string Description => "Sorting network that builds bitonic sequences and merges them with fixed compare-exchange patterns. Ideal for GPUs and parallel hardware.";
+    public override string Complexity => "Best O(n log² n) · Avg O(n log² n) · Worst O(n log² n) · Space O(log n) · Unstable";
 
     public override void Sort(SortContext ctx) {
         BitonicSort(ctx, 0, ctx.Length, true);

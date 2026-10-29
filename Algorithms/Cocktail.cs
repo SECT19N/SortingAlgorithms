@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Cocktail : Sorting {
     public override string Name => "Cocktail";
+    public override string Description => "Bubble sort that alternates direction each pass, so small values also travel quickly to the front.";
+    public override string Complexity => "Best O(n) · Avg O(n²) · Worst O(n²) · Space O(1) · Stable";
 
     public override void Sort(SortContext ctx) {
         int start = 0;

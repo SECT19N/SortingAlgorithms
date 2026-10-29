@@ -1,22 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using System.Windows.Threading;
+using Sort.Algorithms;
+using Sort.Enums;
+using Sort.Helpers;
+using Sort.Models;
 
-namespace Sort;
+namespace Sort.Views;
 
 public partial class MainWindow : Window {
-    private const int MaxValue = 10000;
-    private static readonly Brush BaseBrush = Brushes.SteelBlue;
-    private static readonly Brush CompareBrush = Brushes.Gold;
-    private static readonly Brush WriteBrush = Brushes.Tomato;
-    private static readonly Brush DoneBrush = Brushes.LimeGreen;
-    private static readonly Brush ErrorBrush = Brushes.Red;
+    private const double FrameBudgetMs = 12;
 
     private readonly Sorting[] algorithms = [
         new Bubble(), new Cocktail(), new OddEven(), new Gnome(), new Comb(),
@@ -25,98 +20,74 @@ public partial class MainWindow : Window {
         new Bitonic(), new Counting(), new Pigeonhole(), new Bucket(), new RadixLsd(), new RadixMsd(),
     ];
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(16) };
-    private readonly List<int> highlighted = [];
+    private readonly BarRenderer renderer = new();
+    private readonly ToneSynth synth = new();
+    private readonly int[] hot = new int[2];
 
     private int[] display = [];
-    private Rectangle[] bars = [];
-    private List<SortOp> ops;
-    private int opIndex, compares, swaps, runId;
-    private double computeMs;
+    private SortRun run;
+    private Sorting running;
+    private uint baseColor = BarRenderer.Base, hotColor;
+    private int hotCount, maxValue = 1000;
+    private long compares, swaps, writes;
 
     public MainWindow() {
         InitializeComponent();
         AlgoBox.ItemsSource = algorithms;
         AlgoBox.SelectedIndex = 0;
-        timer.Tick += Timer_Tick;
+        timer.Tick += (s, e) => Advance(OpsPerTick);
         Loaded += (s, e) => Reset();
+        Closed += (s, e) => {
+            run?.Cancel();
+            synth.Dispose();
+        };
     }
 
-    private int OpsPerTick => Math.Max(1, (int)Math.Pow(1.12, SpeedSlider.Value));
+    private int OpsPerTick => (int)Math.Min(int.MaxValue, Math.Max(1, Math.Pow(1.12, SpeedSlider.Value)));
+
+    private int SliderSize => (int)Math.Round(Math.Pow(10, SizeSlider.Value));
 
     private void Reset() {
-        runId++;
-        timer.Stop();
-        ops = null;
-        SetRunning(false);
-        int size = (int)SizeSlider.Value;
-        SizeText.Text = size.ToString();
+        StopRun();
+        int size = SliderSize;
+        SizeText.Text = size.ToString("N0");
+        maxValue = Math.Max(size, 1000);
         display = new int[size];
-        Functions.GenerateArray(display, 0, size - 1, size);
-        BuildBars();
+        Functions.GenerateArray(display, maxValue);
+        baseColor = BarRenderer.Base;
+        hotCount = 0;
+        SetRunning(false);
+        Redraw();
         StatusText.Text = "Ready";
     }
 
-    private void BuildBars() {
-        BarCanvas.Children.Clear();
-        highlighted.Clear();
-        
-        double w = BarCanvas.ActualWidth;
-        
-        if (w <= 0 || display.Length == 0) {
-            bars = Array.Empty<Rectangle>();
-            return;
-        }
-
-        double slot = w / display.Length;
-        double gap = slot > 4 ? 1 : 0;
-        
-        bars = new Rectangle[display.Length];
-        
-        for (int i = 0; i < display.Length; i++) {
-            bars[i] = new Rectangle { Width = Math.Max(1, slot - gap), Fill = BaseBrush };
-            Canvas.SetLeft(bars[i], i * slot);
-            BarCanvas.Children.Add(bars[i]);
-            UpdateBar(i);
-        }
+    private void StopRun() {
+        timer.Stop();
+        run?.Cancel();
+        run = null;
     }
 
-    private void UpdateBar(int i) {
-        double h = BarCanvas.ActualHeight * display[i] / MaxValue;
-        bars[i].Height = h;
-        
-        Canvas.SetTop(bars[i], BarCanvas.ActualHeight - h);
-    }
+    private void Redraw() => renderer.Render(display, maxValue, baseColor, hot, hotCount, hotColor);
 
-    private void SetRunning(bool running) {
-        SortButton.IsEnabled = !running;
-        AlgoBox.IsEnabled = !running;
-        SizeSlider.IsEnabled = !running;
-        PauseButton.IsEnabled = running;
-        StepButton.IsEnabled = running;
+    private void SetRunning(bool isRunning) {
+        SortButton.IsEnabled = !isRunning;
+        AlgoBox.IsEnabled = !isRunning;
+        SizeSlider.IsEnabled = !isRunning;
+        ShuffleButton.IsEnabled = !isRunning;
+        PauseButton.IsEnabled = isRunning;
+        StepButton.IsEnabled = isRunning;
+        StopButton.IsEnabled = isRunning;
         PauseButton.Content = "Pause";
     }
 
-    private async void Sort_Click(object sender, RoutedEventArgs e) {
-        Sorting algorithm = (Sorting)AlgoBox.SelectedItem;
-        int[] snapshot = (int[])display.Clone();
-        int id = ++runId;
-        
+    private void Sort_Click(object sender, RoutedEventArgs e) {
+        running = (Sorting)AlgoBox.SelectedItem;
+        compares = swaps = writes = 0;
+        baseColor = BarRenderer.Base;
+        hotCount = 0;
+        run = new SortRun(running, (int[])display.Clone());
         SetRunning(true);
-        StatusText.Text = "Sorting...";
-        
-        Stopwatch sw = Stopwatch.StartNew();
-        
-        List<SortOp> result = await Task.Run(() => {
-            SortContext ctx = new SortContext(snapshot);
-            algorithm.Sort(ctx);
-            return ctx.Ops;
-        });
-        
-        if (id != runId) return;
-        
-        computeMs = sw.Elapsed.TotalMilliseconds;
-        ops = result;
-        opIndex = compares = swaps = 0;
+        StatusText.Text = "Computing...";
         timer.Start();
     }
 
@@ -124,18 +95,26 @@ public partial class MainWindow : Window {
         if (timer.IsEnabled) {
             timer.Stop();
             PauseButton.Content = "Resume";
-        } else if (ops != null) {
+        } else if (run != null) {
             timer.Start();
             PauseButton.Content = "Pause";
         }
     }
 
     private void Step_Click(object sender, RoutedEventArgs e) {
-        if (ops == null) return;
-        
+        if (run == null) return;
+
         timer.Stop();
         PauseButton.Content = "Resume";
         Advance(1);
+    }
+
+    private void Stop_Click(object sender, RoutedEventArgs e) {
+        StopRun();
+        hotCount = 0;
+        SetRunning(false);
+        Redraw();
+        StatusText.Text = "Stopped";
     }
 
     private void Shuffle_Click(object sender, RoutedEventArgs e) => Reset();
@@ -144,31 +123,61 @@ public partial class MainWindow : Window {
         if (IsLoaded) Reset();
     }
 
-    private void BarCanvas_SizeChanged(object sender, SizeChangedEventArgs e) => BuildBars();
+    private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
+        synth.Volume = (float)VolumeSlider.Value;
+    }
 
-    private void Timer_Tick(object sender, EventArgs e) => Advance(OpsPerTick);
+    private void AlgoBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e) {
+        if (AlgoBox.SelectedItem is Sorting s) {
+            InfoText.Text = $"{s.Name}: {s.Description}  [{s.Complexity}]";
+        }
+    }
+
+    private void BarHost_SizeChanged(object sender, SizeChangedEventArgs e) {
+        DpiScale dpi = VisualTreeHelper.GetDpi(this);
+        int pw = (int)Math.Round(BarHost.ActualWidth * dpi.DpiScaleX);
+        int ph = (int)Math.Round(BarHost.ActualHeight * dpi.DpiScaleY);
+        renderer.Resize(pw, ph, 96 * dpi.DpiScaleX, 96 * dpi.DpiScaleY);
+        BarImage.Source = renderer.Source;
+        Redraw();
+    }
 
     private void Advance(int count) {
-        foreach (int i in highlighted) {
-            if (i < bars.Length) bars[i].Fill = BaseBrush;
-        }
-        
-        highlighted.Clear();
+        if (run == null) return;
+
+        Stopwatch budget = Stopwatch.StartNew();
         SortOp last = default;
         int applied = 0;
-        
-        while (applied < count && opIndex < ops.Count) {
-            last = ops[opIndex++];
-            Apply(last);
+
+        while (applied < count && run.TryRead(out SortOp op)) {
+            last = op;
+            Apply(op);
             applied++;
+
+            // Keep the UI responsive at extreme speeds by stopping the frame early.
+            if ((applied & 1023) == 0 && budget.Elapsed.TotalMilliseconds > FrameBudgetMs) break;
         }
 
-        if (applied > 0) Highlight(last);
-        
-        if (opIndex >= ops.Count) {
+        hotCount = 0;
+        if (applied > 0) SetHot(last);
+
+        if (run.IsDone) {
             Finish();
-        } else {
-            StatusText.Text = $"{algorithms[AlgoBox.SelectedIndex].Name}: {opIndex:N0}/{ops.Count:N0} ops, {compares:N0} compares, {swaps:N0} swaps";
+            return;
+        }
+
+        Redraw();
+
+        if (applied == 0) {
+            StatusText.Text = $"{running.Name}: computing...";
+            return;
+        }
+
+        StatusText.Text = $"{running.Name}: {compares:N0} compares, {swaps:N0} swaps, {writes:N0} writes";
+
+        if (SoundCheck.IsChecked == true) {
+            int value = last.Kind == OpKind.Write ? last.Value : display[last.I];
+            synth.Note(150 * Math.Pow(2, 3.6 * value / maxValue));
         }
     }
 
@@ -180,40 +189,38 @@ public partial class MainWindow : Window {
             case OpKind.Swap:
                 swaps++;
                 (display[op.I], display[op.J]) = (display[op.J], display[op.I]);
-                UpdateBar(op.I);
-                UpdateBar(op.J);
                 break;
             case OpKind.Write:
+                writes++;
                 display[op.I] = op.Value;
-                UpdateBar(op.I);
                 break;
         }
     }
 
-    private void Highlight(SortOp op) {
-        Brush brush = op.Kind == OpKind.Compare ? CompareBrush : WriteBrush;
-        bars[op.I].Fill = brush;
-        highlighted.Add(op.I);
-        
-        if (op.J >= 0) {
-            bars[op.J].Fill = brush;
-            highlighted.Add(op.J);
-        }
+    private void SetHot(SortOp op) {
+        hotColor = op.Kind == OpKind.Compare ? BarRenderer.Compare : BarRenderer.Write;
+        hot[hotCount++] = op.I;
+        if (op.J >= 0) hot[hotCount++] = op.J;
     }
 
     private void Finish() {
         timer.Stop();
         bool sorted = true;
-        
+
         for (int i = 1; i < display.Length; i++) {
             if (display[i - 1] > display[i]) { sorted = false; break; }
         }
-        
-        foreach (Rectangle bar in bars) bar.Fill = sorted ? DoneBrush : ErrorBrush;
-        
-        highlighted.Clear();
-        ops = null;
+
+        string error = run.Error;
+        double computeMs = run.ComputeMs;
+        baseColor = sorted ? BarRenderer.Done : BarRenderer.Error;
+        hotCount = 0;
+        run = null;
         SetRunning(false);
-        StatusText.Text = $"{(sorted ? "Sorted" : "NOT SORTED")}: {compares:N0} compares, {swaps:N0} swaps, computed in {computeMs:N2} ms";
+        Redraw();
+
+        StatusText.Text = error != null
+            ? $"Failed: {error}"
+            : $"{(sorted ? "Sorted" : "NOT SORTED")}: {compares:N0} compares, {swaps:N0} swaps, {writes:N0} writes, computed in {computeMs:N0} ms";
     }
 }

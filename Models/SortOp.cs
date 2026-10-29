@@ -1,4 +1,6 @@
-namespace Sort;
+using Sort.Enums;
+
+namespace Sort.Models;
 
 public readonly struct SortOp {
     public OpKind Kind { get; }

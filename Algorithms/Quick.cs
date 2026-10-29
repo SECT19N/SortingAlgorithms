@@ -1,15 +1,26 @@
-﻿namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Quick : Sorting {
     public override string Name => "Quick";
+    public override string Description => "Partitions around a pivot (the last item, Lomuto scheme) then recurses on both sides. Degrades to O(n²) on sorted input.";
+    public override string Complexity => "Best O(n log n) · Avg O(n log n) · Worst O(n²) · Space O(log n) · Unstable";
     public override void Sort(SortContext ctx) {
         QuickSort(ctx, 0, ctx.Length - 1);
     }
     private void QuickSort(SortContext ctx, int left, int right) {
-        if (left < right) {
+        // Recurse into the smaller side and loop on the larger one, so the stack stays O(log n)
+        // even on sorted input at a million items.
+        while (left < right) {
             int pivot = Partition(ctx, left, right);
-            QuickSort(ctx, left, pivot - 1);
-            QuickSort(ctx, pivot + 1, right);
+            if (pivot - left < right - pivot) {
+                QuickSort(ctx, left, pivot - 1);
+                left = pivot + 1;
+            } else {
+                QuickSort(ctx, pivot + 1, right);
+                right = pivot - 1;
+            }
         }
     }
     private int Partition(SortContext ctx, int left, int right) {

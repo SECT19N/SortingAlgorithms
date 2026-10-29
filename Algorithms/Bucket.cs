@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using Sort.Models;
 
-namespace Sort;
+namespace Sort.Algorithms;
 
 public class Bucket : Sorting {
     public override string Name => "Bucket";
+    public override string Description => "Spreads items into buckets by value range, insertion-sorts each bucket, then concatenates. Fast on uniformly distributed data.";
+    public override string Complexity => "Best O(n + k) · Avg O(n + k) · Worst O(n²) · Space O(n + k) · Stable";
 
     public override void Sort(SortContext ctx) {
         int n = ctx.Length;

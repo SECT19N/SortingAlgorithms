@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Cycle : Sorting {
     public override string Name => "Cycle";
+    public override string Description => "Writes each item straight to its final position by following permutation cycles, so it does the minimum possible number of writes.";
+    public override string Complexity => "Best O(n²) · Avg O(n²) · Worst O(n²) · Space O(1) · Unstable";
 
     public override void Sort(SortContext ctx) {
         int n = ctx.Length;

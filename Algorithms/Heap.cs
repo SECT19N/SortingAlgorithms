@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Heap : Sorting {
     public override string Name => "Heap";
+    public override string Description => "Builds a max-heap in place, then repeatedly swaps the maximum to the end and restores the heap.";
+    public override string Complexity => "Best O(n log n) · Avg O(n log n) · Worst O(n log n) · Space O(1) · Unstable";
 
     public override void Sort(SortContext ctx) {
         HeapSort(ctx, 0, ctx.Length);

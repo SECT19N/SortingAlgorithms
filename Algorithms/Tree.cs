@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using Sort.Models;
 
-namespace Sort;
+namespace Sort.Algorithms;
 
 public class Tree : Sorting {
     public override string Name => "Tree";
+    public override string Description => "Inserts every item into an unbalanced binary search tree, then reads it back in order. Degrades to O(n²) on sorted input.";
+    public override string Complexity => "Best O(n log n) · Avg O(n log n) · Worst O(n²) · Space O(n) · Stable";
 
     public override void Sort(SortContext ctx) {
         int n = ctx.Length;

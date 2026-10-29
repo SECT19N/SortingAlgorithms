@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class RadixMsd : Sorting {
     public override string Name => "Radix MSD";
+    public override string Description => "Sorts by the most significant digit first, then recursively sorts each digit bucket. Stops early on buckets of one item.";
+    public override string Complexity => "Best O(d·(n + b)) · Avg O(d·(n + b)) · Worst O(d·(n + b)) · Space O(n + b) · Stable";
 
     public override void Sort(SortContext ctx) {
         int n = ctx.Length;

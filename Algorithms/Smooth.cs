@@ -1,12 +1,15 @@
 using System.Numerics;
+using Sort.Models;
 
-namespace Sort;
+namespace Sort.Algorithms;
 
 // Dijkstra's smoothsort: an in-place heap sort over a forest of Leonardo heaps.
 public class Smooth : Sorting {
     private static readonly int[] Leonardo = BuildLeonardo();
 
     public override string Name => "Smooth";
+    public override string Description => "Dijkstra's heap sort variant using a forest of Leonardo heaps. In place, and approaches O(n) on nearly sorted input.";
+    public override string Complexity => "Best O(n) · Avg O(n log n) · Worst O(n log n) · Space O(1) · Unstable";
 
     public override void Sort(SortContext ctx) {
         int hi = ctx.Length - 1;

@@ -1,13 +1,14 @@
-﻿using System;
+using System;
 
-namespace Sort;
+namespace Sort.Helpers;
 
 public class Functions {
-    public static int[] GenerateArray(int[] arr, int left, int right, int size) {
-        Random r = new Random();
-        
-        for (int i = 0; i < size; i++) {
-            arr[i] = r.Next(10000);
+    // Fills arr with random values in 1..maxValue.
+    public static int[] GenerateArray(int[] arr, int maxValue) {
+        Random r = Random.Shared;
+
+        for (int i = 0; i < arr.Length; i++) {
+            arr[i] = r.Next(1, maxValue + 1);
         }
 
         return arr;

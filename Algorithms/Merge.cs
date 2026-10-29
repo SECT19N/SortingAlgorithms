@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Merge : Sorting {
     public override string Name => "Merge";
+    public override string Description => "Splits the list in halves, sorts each half, then merges them through a temporary buffer. Predictable and stable.";
+    public override string Complexity => "Best O(n log n) · Avg O(n log n) · Worst O(n log n) · Space O(n) · Stable";
 
     public override void Sort(SortContext ctx) {
         MergeSort(ctx, new int[ctx.Length], 0, ctx.Length - 1);

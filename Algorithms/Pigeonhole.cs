@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Pigeonhole : Sorting {
     public override string Name => "Pigeonhole";
+    public override string Description => "Drops each item into the hole for its exact value, then collects the holes in order. Like counting sort; best when the range is close to the item count.";
+    public override string Complexity => "Best O(n + k) · Avg O(n + k) · Worst O(n + k) · Space O(k)";
 
     public override void Sort(SortContext ctx) {
         int n = ctx.Length;

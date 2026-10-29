@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Pancake : Sorting {
     public override string Name => "Pancake";
+    public override string Description => "Sorts using only prefix reversals: flip the largest item to the front, then flip it into its final spot, and repeat on the shorter prefix.";
+    public override string Complexity => "Best O(n²) · Avg O(n²) · Worst O(n²) · Space O(1) · Unstable";
 
     public override void Sort(SortContext ctx) {
         for (int size = ctx.Length; size > 1; size--) {

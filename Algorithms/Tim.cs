@@ -1,12 +1,15 @@
 using System;
+using Sort.Models;
 
-namespace Sort;
+namespace Sort.Algorithms;
 
 // Simplified Timsort: insertion-sorted runs merged pairwise (no galloping, fixed run length).
 public class Tim : Sorting {
     private const int Run = 32;
 
     public override string Name => "Tim";
+    public override string Description => "Simplified Timsort: insertion-sorts runs of 32 then merges runs pairwise. Real Timsort also finds natural runs and gallops, which makes sorted input O(n).";
+    public override string Complexity => "Best O(n log n) here · Avg O(n log n) · Worst O(n log n) · Space O(n) · Stable";
 
     public override void Sort(SortContext ctx) {
         int n = ctx.Length;

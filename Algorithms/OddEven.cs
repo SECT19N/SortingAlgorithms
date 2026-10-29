@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class OddEven : Sorting {
     public override string Name => "Odd-Even";
+    public override string Description => "Compares odd-indexed pairs, then even-indexed pairs, in alternating phases until nothing swaps. Designed for parallel hardware.";
+    public override string Complexity => "Best O(n) · Avg O(n²) · Worst O(n²) · Space O(1) · Stable";
 
     public override void Sort(SortContext ctx) {
         bool sorted = false;

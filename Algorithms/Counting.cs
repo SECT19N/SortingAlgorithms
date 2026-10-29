@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class Counting : Sorting {
     public override string Name => "Counting";
+    public override string Description => "Counts how often each value occurs, then writes the values back in order. No comparisons; needs a limited value range k.";
+    public override string Complexity => "Best O(n + k) · Avg O(n + k) · Worst O(n + k) · Space O(k)";
 
     public override void Sort(SortContext ctx) {
         if (ctx.Length < 2) {

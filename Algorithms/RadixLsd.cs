@@ -1,7 +1,11 @@
-namespace Sort;
+using Sort.Models;
+
+namespace Sort.Algorithms;
 
 public class RadixLsd : Sorting {
     public override string Name => "Radix LSD";
+    public override string Description => "Sorts digit by digit from the least significant, using a stable counting pass for each digit (base 10).";
+    public override string Complexity => "Best O(d·(n + b)) · Avg O(d·(n + b)) · Worst O(d·(n + b)) · Space O(n + b) · Stable";
 
     public override void Sort(SortContext ctx) {
         int n = ctx.Length;

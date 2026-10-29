@@ -1,11 +1,14 @@
 using System;
+using Sort.Models;
 
-namespace Sort;
+namespace Sort.Algorithms;
 
 public class Intro : Sorting {
     private const int SmallRange = 16;
 
     public override string Name => "Intro";
+    public override string Description => "Quick sort with median-of-three pivots that switches to heap sort when recursion gets too deep and to insertion sort on tiny ranges. The idea behind C++ std::sort.";
+    public override string Complexity => "Best O(n log n) · Avg O(n log n) · Worst O(n log n) · Space O(log n) · Unstable";
 
     public override void Sort(SortContext ctx) {
         int depth = 2 * (int)Math.Log2(Math.Max(ctx.Length, 1));
