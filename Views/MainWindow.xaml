@@ -1,0 +1,33 @@
+<Window x:Class="Sort.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sorting Visualizer" Height="600" Width="1000" MinHeight="300" MinWidth="700">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <WrapPanel Grid.Row="0" Margin="8">
+            <ComboBox x:Name="AlgoBox" Width="130" Margin="0,0,12,0" DisplayMemberPath="Name" VerticalAlignment="Center"/>
+            <TextBlock Text="Size" VerticalAlignment="Center" Margin="0,0,4,0"/>
+            <Slider x:Name="SizeSlider" Width="130" Minimum="10" Maximum="1000" Value="100"
+                    VerticalAlignment="Center" ValueChanged="SizeSlider_ValueChanged"/>
+            <TextBlock x:Name="SizeText" Width="40" Margin="4,0,12,0" VerticalAlignment="Center"/>
+            <TextBlock Text="Speed" VerticalAlignment="Center" Margin="0,0,4,0"/>
+            <Slider x:Name="SpeedSlider" Width="130" Minimum="0" Maximum="80" Value="30"
+                    VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <Button x:Name="ShuffleButton" Content="Shuffle" Width="70" Margin="0,0,6,0" Click="Shuffle_Click"/>
+            <Button x:Name="SortButton" Content="Sort" Width="70" Margin="0,0,6,0" Click="Sort_Click"/>
+            <Button x:Name="PauseButton" Content="Pause" Width="70" Margin="0,0,6,0" Click="Pause_Click" IsEnabled="False"/>
+            <Button x:Name="StepButton" Content="Step" Width="70" Click="Step_Click" IsEnabled="False"/>
+        </WrapPanel>
+
+        <Border Grid.Row="1" Background="#FF1E1E1E" Margin="8,0">
+            <Canvas x:Name="BarCanvas" ClipToBounds="True" SizeChanged="BarCanvas_SizeChanged"/>
+        </Border>
+
+        <TextBlock x:Name="StatusText" Grid.Row="2" Margin="8" />
+    </Grid>
+</Window>
